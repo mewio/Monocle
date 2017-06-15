@@ -235,7 +235,16 @@ FIXED_OPACITY = False  # Make marker opacity independent of remaining time
 SHOW_TIMER = False  # Show remaining time on a label under each pokemon marker
 
 ### OPTIONS BELOW THIS POINT ARE ONLY NECESSARY FOR NOTIFICATIONS ###
-NOTIFY = False  # enable notifications
+
+from .notifyconfig import *
+NOTIFY = NotifyConfig()
+#NOTIFY.disable()  # disable notifications
+
+NOTIFY.spawn(['dratini', 'dragonair'], [iv > 80, level > 20])
+
+# A named notification channel gets its own recipients and rules
+#NOTIFY.senders(SMTPConfig(TO=['bob@example.com']), channel='pals')
+#NOTIFY.spawn({'Unown'}, True, channel='pals')
 
 # create images with Pokémon image and optionally include IVs and moves
 # requires cairo and ENCOUNTER = 'notifying' or 'all'
@@ -260,7 +269,7 @@ NOTIFY_RANKING = 90
 # The first in the list will have a rarity score of 1, the last will be 0.
 #NOTIFY_IDS = (130, 89, 131, 3, 9, 134, 62, 94, 91, 87, 71, 45, 85, 114, 80, 6)
 
-# Sightings of the top (x) will always be notified about, even if below TIME_REQUIRED
+# Spawns of the top (x) will always notify, even if below TIME_REQUIRED
 # (ignored if using NOTIFY_IDS instead of NOTIFY_RANKING)
 ALWAYS_NOTIFY = 14
 
@@ -289,28 +298,95 @@ FULL_TIME = 1800  # the number of seconds after a notification when only MINIMUM
 INITIAL_SCORE = 0.7  # the required score immediately after a notification
 MINIMUM_SCORE = 0.4  # the required score after FULL_TIME seconds have passed
 
-### The following values are fake, replace them with your own keys to enable
-### notifications, otherwise exclude them from your config
-### You must provide keys for at least one service to use notifications.
+# Emulate rarity-related legacy notification module bugs
+#EMULATE_LEGACY_RARITY_BUGS = True
 
-#PB_API_KEY = 'o.9187cb7d5b857c97bfcaa8d63eaa8494'
-#PB_CHANNEL = 0  # set to the integer of your channel, or to None to push privately
+### The following credentials are fake. Replace them with your own keys to
+### enable notifications, or leave them commented out.
+### You must configure for at least one service in order to use notifications.
 
-#TWITTER_CONSUMER_KEY = '53d997264eb7f6452b7bf101d'
-#TWITTER_CONSUMER_SECRET = '64b9ebf618829a51f8c0535b56cebc808eb3e80d3d18bf9e00'
-#TWITTER_ACCESS_KEY = '1dfb143d4f29-6b007a5917df2b23d0f6db951c4227cdf768b'
-#TWITTER_ACCESS_SECRET = 'e743ed1353b6e9a45589f061f7d08374db32229ec4a61'
+### Discord webhook ID and token can be found in a webhook URL with this format:
+### https://discordapp.com/api/webhooks/<webhook_id>/<webhook_token>
+###
+#DISCORD_WEBHOOK_ID = '123456789012345678'
+#DISCORD_WEBHOOK_TOKEN = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+###
+### The following format strings can override Discord webhook defaults:
+###
+#DISCORD_SPAWN_USERNAME = ""
+#DISCORD_SPAWN_CONTENT = ""
+#DISCORD_SPAWN_EMBED_AUTHOR = ""
+#DISCORD_SPAWN_EMBED_TITLE = "{name} - {pplace}"
+#DISCORD_SPAWN_EMBED_DESC = "[{attack}/{defense}/{stamina}] {move1}/{move2}\nUntil {untilrange}"
+#DISCORD_SPAWN_EMBED_MAP = 'https://maps.googleapis.com/maps/api/staticmap?key={config.GOOGLE_MAPS_KEY}&language={config.LANGUAGE}&size=250x125&zoom=15&markers={latitude:.5f},{longitude:.5f}'
+#DISCORD_SPAWN_EMBED_THUMBNAIL = 'https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/{dexno}.png'
+###
+### The following dict allows completely custom Discord webhook structures:
+### https://discordapp.com/developers/docs/resources/webhook#execute-webhook
+###
+#DISCORD_SPAWN_DATA = {"username": "{name} {iv}%", "embeds": [{"title": "{place}", "url": "{navurl}"}]}
 
-## Telegram bot token is the one Botfather sends to you after completing bot creation.
-## Chat ID can be two different values:
-## 1) '@channel_name' for channels
-## 2) Your chat_id if you will use your own account. To retrieve your ID, write to your bot and check this URL:
-##     https://api.telegram.org/bot<BOT_TOKEN_HERE>/getUpdates
-#TELEGRAM_BOT_TOKEN = '123456789:AA12345qT6QDd12345RekXSQeoZBXVt-AAA'
+#PUSHBULLET_API_KEY = 'o.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#PUSHBULLET_CHANNEL = 'mytag'  # your channel tag name, or to None to push privately
+#PUSHBULLET_SPAWN_TITLE = "{name} {iv}%"
+#PUSHBULLET_SPAWN_BODY = "{attack},{defense},{stamina}\nuntil {untilrange}\n"
+
+#SMTP_TO = ['username@example.net']
+#SMTP_FROM = 'monocle@example.com'
+#SMTP_HOST = 'localhost'
+#SMTP_PORT = 587
+#SMTP_TLS = False
+#SMTP_STARTTLS = False
+#SMTP_TIMEOUT = 30
+#SMTP_USERNAME = None
+#SMTP_PASSWORD = None
+#SMTP_SPAWN_SUBJECT = "{name} {iv}%"
+#SMTP_SPAWN_TEXT = "{name}\n{attack},{defense},{stamina}\nuntil {untilrange}\n{navurl}\n"
+#SMTP_ATTACH = True
+
+#TWITTER_CONSUMER_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_CONSUMER_SECRET = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_ACCESS_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_ACCESS_SECRET = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_SPAWN_FORMATS = ["{name} {pplaceshort} until {untilrange} {navurl}"]
+
+### Telegram bot token is the one Botfather sends to you after creating a bot.
+### CHAT_ID can be any of these:
+### 1) '@channel_name' for public channels.
+### 2) The channel's chat_id for private channels.
+###    This is a 13-digit negative number, formed by prepending "-100" to the
+###    channel id, which can be retrieved using https://github.com/vysheng/tg
+###    or found in the channel's web.telegram.org URL (between the 'c' and '_').
+###    Details here:  https://github.com/GabrielRF/telegram-id
+### 3) Your chat_id if you will be sending messages to your own account.
+###    To retrieve your ID, write to your bot and check this URL:
+###    https://api.telegram.org/bot<BOT_TOKEN_HERE>/getUpdates
+#TELEGRAM_BOT_TOKEN = '123456789:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 #TELEGRAM_CHAT_ID = '@your_channel'
+#TELEGRAM_SPAWN_TEXT = "Expires: {untilrange}"
+#TELEGRAM_SPAWN_TITLE = "{name} {attack}/{defense}/{stamina}"
 
+#WEBHOOK_TIMEOUT = 4
+#WEBHOOK_VERIFY_TLS = True
 #WEBHOOKS = {'http://127.0.0.1:4000'}
 
+### Field format for datetime values in notification messages
+#DATETIME_FORMAT_SPEC = "%X"
+
+### String format for datetime ranges in notification messages
+### These field names will have values: {min}, {mid}, {max}, {margin}
+#DATETIME_RANGE_FORMAT = "between {min} and {max}"
+
+### String format for duration ranges in notification messages
+### These field names will have values: {min}, {mid}, {max}, {margin}
+#DURATION_RANGE_FORMAT = "between {min} and {max}"
+
+### Gender symbols & text for each gender number
+#GENDER_SYMBOLS = {1: "♂", 2: "♀", 3: "⚲"}
+#GENDER_TEXT = {1: "male", 2: "female", 3: "genderless"}
+
+### Navigation URL format, for spawn notifications
+#NAV_URL_FORMAT = 'https://maps.google.com/maps?q={latitude:.5f},{longitude:.5f}'
 
 ##### Referencing landmarks in your tweets/notifications
 

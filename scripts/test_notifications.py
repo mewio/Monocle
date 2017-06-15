@@ -18,7 +18,7 @@ import sys
 monocle_dir = Path(__file__).resolve().parents[1]
 sys.path.append(str(monocle_dir))
 
-from monocle import names, sanitized as conf
+from monocle import names, notifyconfig, sanitized as conf
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -44,7 +44,7 @@ parser.add_argument(
 parser.add_argument(
     '-u', '--unmodified',
     action='store_true',
-    help="don't add ID to ALWAYS_NOTIFY_IDS"
+    help="don't modify ALWAYS_NOTIFY_IDS / NEVER_NOTIFY_IDS"
 )
 args = parser.parse_args()
 
@@ -57,11 +57,13 @@ else:
 
 if not args.unmodified:
     conf.ALWAYS_NOTIFY_IDS = {pokemon_id}
+    conf.NEVER_NOTIFY_IDS = {}
+    if isinstance(conf.NOTIFY, notifyconfig.NotifyConfig):
+        conf.NOTIFY.spawn_law()  # Avoid config file interference
 
 conf.HASHTAGS = {'test'}
 
-from monocle.notification import Notifier
-from monocle.shared import SessionManager
+from monocle.notifier import Notifier
 from monocle.names import MOVES
 
 root = logging.getLogger()
@@ -102,18 +104,24 @@ pokemon = {
     'seen': now,
     'move_1': choice(MOVES),
     'move_2': choice(MOVES),
+    'gender': randint(1, 3),
+    'height': uniform(0.3, 4.0),
+    'weight': uniform(1, 600),
     'valid': True,
     'expire_timestamp': now + tth
 }
 
-notifier = Notifier()
-
 loop = get_event_loop()
+notifier = Notifier(loop=loop)
+notifier.log_state()
 
-if loop.run_until_complete(notifier.notify(pokemon, randint(1, 2))):
+#if not loop.run_until_complete(notifier.test_senders()):
+#    sys.exit(1)
+
+if loop.run_until_complete(notifier.spawn_notify(pokemon, randint(1, 2))):
     print('Success')
 else:
     print('Failure')
+loop.run_until_complete(notifier.close_senders())
 
-SessionManager.close()
 loop.close()
