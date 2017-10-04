@@ -464,15 +464,15 @@ function populateSettingsPanels(){
     var container = $('.settings-panel[data-panel="filters"]').children('.panel-body');
     var newHtml = '';
     for (var i = 1; i <= _pokemon_count; i++){
-        var partHtml = `<div class="text-center">
-                <img src="static/monocle-icons/icons/`+i+`.png">
-                <div class="btn-group" role="group" data-group="filter-`+i+`">
-                  <button type="button" class="btn btn-default" data-id="`+i+`" data-value="pokemon">Pokémon</button>
-                  <button type="button" class="btn btn-default" data-id="`+i+`" data-value="trash">Trash</button>
-                  <button type="button" class="btn btn-default" data-id="`+i+`" data-value="hidden">Hide</button>
-                </div>
-            </div>
-        `;
+        var partHtml = '<div class="text-center">\
+                <img src="static/monocle-icons/icons/'+i+'.png">\
+                <div class="btn-group" role="group" data-group="filter-'+i+'">\
+                  <button type="button" class="btn btn-default" data-id="'+i+'" data-value="pokemon">Pokémon</button>\
+                  <button type="button" class="btn btn-default" data-id="'+i+'" data-value="trash">Trash</button>\
+                  <button type="button" class="btn btn-default" data-id="'+i+'" data-value="hidden">Hide</button>\
+                </div>\
+            </div>\
+        ';
 
         newHtml += partHtml
     }
