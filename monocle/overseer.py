@@ -82,7 +82,7 @@ class Overseer:
 
         for username, account in ACCOUNTS.items():
             account['username'] = username
-            if account.get('banned'):
+            if account.get('banned') or account.get('warn'):
                 continue
             if account.get('captcha'):
                 self.captcha_queue.put(account)

@@ -206,6 +206,8 @@ class Worker:
         try:
             get_player = responses['GET_PLAYER']
 
+            if get_player.warn:
+                raise ex.WarnAccountException
             if get_player.banned:
                 raise ex.BannedAccountException
 
@@ -671,6 +673,11 @@ class Worker:
             self.error_code = 'HASHING BAN'
             self.log.error('Temporarily banned from hashing server for using invalid keys.')
             await sleep(185, loop=LOOP)
+        except ex.WarnAccountException:
+            self.error_code = 'WARN'
+            self.log.warning('{} is warn', self.username)
+            await sleep(1, loop=LOOP)
+            await self.remove_account(warn=True)
         except ex.BannedAccountException:
             self.error_code = 'BANNED'
             self.log.warning('{} is banned', self.username)
@@ -1141,10 +1148,14 @@ class Worker:
 
         ACCOUNTS[self.username] = self.account
 
-    async def remove_account(self):
+    async def remove_account(self, warn=False):
         self.error_code = 'REMOVING'
-        self.log.warning('Removing {} due to ban.', self.username)
-        self.account['banned'] = True
+        if warn:
+            self.account['warn'] = True
+            self.log.warning('Removing {} due to warn.', self.username)
+        else:
+            self.account['banned'] = True
+            self.log.warning('Removing {} due to ban.', self.username)
         self.update_accounts_dict()
         await self.new_account()
 
