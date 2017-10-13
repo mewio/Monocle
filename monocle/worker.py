@@ -252,25 +252,25 @@ class Worker:
             slot=tuple(),
             filters=(2,)
         )
-        await self.call(request, buddy=not tutorial, action=5)
+        await self.call(request, buddy=not tutorial, inbox=False, action=5)
         await self.random_sleep(7, 14)
 
         request = self.api.create_request()
         request.set_avatar(player_avatar=plater_avatar)
-        await self.call(request, buddy=not tutorial, action=2)
+        await self.call(request, buddy=not tutorial, inbox=False, action=2)
 
         if tutorial:
             await self.random_sleep(.5, 4)
 
             request = self.api.create_request()
             request.mark_tutorial_complete(tutorials_completed=(1,))
-            await self.call(request, buddy=False)
+            await self.call(request, buddy=False, inbox=False)
 
         await self.random_sleep(.5, 1)
 
         request = self.api.create_request()
         request.get_player_profile()
-        await self.call(request, action=1)
+        await self.call(request, inbox=False, action=1)
 
     async def app_simulation_login(self, version):
         self.log.info('Starting RPC login sequence (iOS app simulation)')
@@ -301,7 +301,7 @@ class Worker:
                     paginate=True,
                     page_offset=page_offset,
                     page_timestamp=page_timestamp)
-                responses = await self.call(request, buddy=False, settings=True)
+                responses = await self.call(request, buddy=False, settings=True, inbox=False)
                 if i > 2:
                     await sleep(1.45)
                     i = 0
@@ -329,7 +329,7 @@ class Worker:
                     paginate=True,
                     page_offset=page_offset,
                     page_timestamp=page_timestamp)
-                responses = await self.call(request, buddy=False, settings=True)
+                responses = await self.call(request, buddy=False, settings=True, inbox=False)
                 if i > 2:
                     await sleep(1.5)
                     i = 0
@@ -378,13 +378,13 @@ class Worker:
             # legal screen
             request = self.api.create_request()
             request.mark_tutorial_complete(tutorials_completed=(0,))
-            await self.call(request, buddy=False)
+            await self.call(request, buddy=False, inbox=False)
 
             await self.random_sleep(.35, .525)
 
             request = self.api.create_request()
             request.get_player(player_locale=conf.PLAYER_LOCALE)
-            await self.call(request, buddy=False)
+            await self.call(request, buddy=False, inbox=False)
             await sleep(1)
 
         if 1 not in tutorial_state:
@@ -400,18 +400,13 @@ class Worker:
                 ('1a3c2816-65fa-4b97-90eb-0b301c064b7a/1487275569649000',
                 'aa8f7687-a022-4773-b900-3a8c170e9aea/1487275581132582',
                 'e89109b0-9a54-40fe-8431-12f7826c8194/1487275593635524'))
-            await self.call(request)
+            await self.call(request, inbox=False)
 
             await self.random_sleep(7, 10.3)
             request = self.api.create_request()
             starter = choice((1, 4, 7))
             request.encounter_tutorial_complete(pokemon_id=starter)
-            await self.call(request, action=1)
-
-            await self.random_sleep(.4, .5)
-            request = self.api.create_request()
-            request.get_player(player_locale=conf.PLAYER_LOCALE)
-            responses = await self.call(request)
+            responses = await self.call(request, inbox=False, action=1)
 
             try:
                 inventory = responses['GET_INVENTORY'].inventory_delta.inventory_items
@@ -423,35 +418,40 @@ class Worker:
             except (KeyError, TypeError):
                 starter_id = None
 
+            await self.random_sleep(.4, .5)
+            request = self.api.create_request()
+            request.get_player(player_locale=conf.PLAYER_LOCALE)
+            await self.call(request, inbox=False)
+
         if 4 not in tutorial_state:
             # name selection
             await self.random_sleep(12, 18)
             request = self.api.create_request()
             request.claim_codename(codename=self.username)
-            await self.call(request, action=2)
+            await self.call(request, inbox=False, action=2)
 
             await sleep(.7, loop=LOOP)
             request = self.api.create_request()
             request.get_player(player_locale=conf.PLAYER_LOCALE)
-            await self.call(request)
+            await self.call(request, inbox=False)
             await sleep(.13, loop=LOOP)
 
             request = self.api.create_request()
             request.mark_tutorial_complete(tutorials_completed=(4,))
-            await self.call(request, buddy=False)
+            await self.call(request, buddy=False, inbox=False)
 
         if 7 not in tutorial_state:
             # first time experience
             await self.random_sleep(3.9, 4.5)
             request = self.api.create_request()
             request.mark_tutorial_complete(tutorials_completed=(7,))
-            await self.call(request)
+            await self.call(request, inbox=False)
 
         if starter_id:
             await self.random_sleep(4, 5)
             request = self.api.create_request()
             request.set_buddy_pokemon(pokemon_id=starter_id)
-            await self.call(request, action=2)
+            await self.call(request, inbox=False, action=2)
             await self.random_sleep(.8, 1.2)
 
         await sleep(.2, loop=LOOP)
