@@ -367,6 +367,11 @@ class Worker:
             else:
                 self.log.warning('No player level')
 
+            request = self.api.create_request()
+            request.get_store_items()
+            await self.call(request, chain=False)
+            await self.random_sleep(.43, .97)
+
             self.log.info('Finished RPC login sequence (iOS app simulation)')
             await self.random_sleep(.5, 1.3)
         self.error_code = None
