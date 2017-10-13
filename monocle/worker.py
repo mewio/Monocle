@@ -954,7 +954,7 @@ class Worker:
                         # level_up_rewards if level has changed
                         request = self.api.create_request()
                         request.level_up_rewards(level=level)
-                        await self.call(request, settings=True)
+                        await self.call(request)
                         self.log.info('Level up, get rewards.', name)
                         self.player_level = level
                         break
