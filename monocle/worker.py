@@ -223,7 +223,7 @@ class Worker:
     async def download_remote_config(self, version):
         request = self.api.create_request()
         request.download_remote_config_version(platform=1, app_version=version)
-        responses = await self.call(request, stamp=False, buddy=False, settings=True, inbox=False, dl_hash=False)
+        responses = await self.call(request, buddy=False, settings=True, inbox=False, dl_hash=False)
 
         try:
             inventory_items = responses['GET_INVENTORY'].inventory_delta.inventory_items
@@ -478,7 +478,7 @@ class Worker:
                         else:
                             self.unused_incubators.appendleft(item)
 
-    async def call(self, request, chain=True, stamp=True, buddy=True, settings=False, inbox=True, dl_hash=True, action=None):
+    async def call(self, request, chain=True, buddy=True, settings=False, inbox=True, dl_hash=True, action=None):
         if chain:
             request.check_challenge()
             request.get_hatched_eggs()
