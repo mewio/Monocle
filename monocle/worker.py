@@ -438,7 +438,7 @@ class Worker:
 
             request = self.api.create_request()
             request.mark_tutorial_complete(tutorials_completed=(4,))
-            await self.call(request, buddy=False, inbox=False)
+            await self.call(request, inbox=False)
 
         if 7 not in tutorial_state:
             # first time experience
