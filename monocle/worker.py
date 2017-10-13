@@ -946,6 +946,20 @@ class Worker:
 
         if result == 1:
             self.log.info('Spun {}.', name)
+            try:
+                inventory_items = responses['GET_INVENTORY'].inventory_delta.inventory_items
+                for item in inventory_items:
+                    level = item.inventory_item_data.player_stats.level
+                    if level and level > self.player_level:
+                        # level_up_rewards if level has changed
+                        request = self.api.create_request()
+                        request.level_up_rewards(level=level)
+                        await self.call(request, settings=True)
+                        self.log.info('Level up, get rewards.', name)
+                        self.player_level = level
+                        break
+            except KeyError:
+                pass
         elif result == 2:
             self.log.info('The server said {} was out of spinning range. {:.1f}m {:.1f}{}',
                 name, distance, self.speed, UNIT_STRING)
