@@ -214,7 +214,7 @@ class Sighting(Base):
     __tablename__ = 'sightings'
 
     id = Column(Integer, primary_key=True)
-    pokemon_id = Column(TINY_TYPE)
+    pokemon_id = Column(SmallInteger)
     spawn_id = Column(ID_TYPE)
     expire_timestamp = Column(Integer, index=True)
     encounter_id = Column(HUGE_TYPE, index=True)
@@ -241,7 +241,7 @@ class Mystery(Base):
     __tablename__ = 'mystery_sightings'
 
     id = Column(Integer, primary_key=True)
-    pokemon_id = Column(TINY_TYPE)
+    pokemon_id = Column(SmallInteger)
     spawn_id = Column(ID_TYPE, index=True)
     encounter_id = Column(HUGE_TYPE, index=True)
     lat = Column(FLOAT_TYPE)
@@ -303,7 +303,7 @@ class FortSighting(Base):
     last_modified = Column(Integer, index=True)
     team = Column(TINY_TYPE)
     prestige = Column(MEDIUM_TYPE)
-    guard_pokemon_id = Column(TINY_TYPE)
+    guard_pokemon_id = Column(SmallInteger)
 
     __table_args__ = (
         UniqueConstraint(
@@ -683,7 +683,7 @@ def get_pokemon_ranking(session):
     if conf.REPORT_SINCE:
         query = query.filter(Sighting.expire_timestamp > SINCE_TIME)
     ranked = [r[0] for r in query]
-    none_seen = [x for x in range(1,252) if x not in ranked]
+    none_seen = [x for x in range(1,387) if x not in ranked]
     return none_seen + ranked
 
 
@@ -704,7 +704,7 @@ def sightings_to_csv(since=None, output='sightings.csv'):
     with session_scope() as session:
         sightings = get_sightings_per_pokemon(session)
     od = OrderedDict()
-    for pokemon_id in range(1, 252):
+    for pokemon_id in range(1, 387):
         if pokemon_id not in sightings:
             od[pokemon_id] = 0
     od.update(sightings)
@@ -735,7 +735,7 @@ def get_nonexistent_pokemon(session):
         {report_since}
     '''.format(report_since=SINCE_QUERY))
     db_ids = [r[0] for r in query]
-    return [x for x in range(1,252) if x not in db_ids]
+    return [x for x in range(1,387) if x not in db_ids]
 
 
 def get_all_sightings(session, pokemon_ids):

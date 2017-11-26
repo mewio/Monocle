@@ -1,5 +1,5 @@
 var _last_pokemon_id = 0;
-var _pokemon_count = 251;
+var _pokemon_count = 386;
 var _WorkerIconUrl = 'static/monocle-icons/assets/ball.png';
 var _PokestopIconUrl = 'static/monocle-icons/assets/stop.png';
 
