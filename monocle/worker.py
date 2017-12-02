@@ -228,7 +228,7 @@ class Worker:
         request = self.api.create_request()
         # to be added : device_model=account['model']
         request.download_remote_config_version(platform=1, app_version=version)
-        responses = await self.call(request, buddy=False, settings=True, inbox=False, dl_hash=False)
+        responses = await self.call(request, buddy=False, inbox=False, dl_hash=False)
 
         try:
             inventory_items = responses['GET_INVENTORY'].inventory_delta.inventory_items
@@ -306,7 +306,7 @@ class Worker:
                     paginate=True,
                     page_offset=page_offset,
                     page_timestamp=page_timestamp)
-                responses = await self.call(request, buddy=False, settings=True, inbox=False)
+                responses = await self.call(request, buddy=False, inbox=False)
                 if i > 2:
                     await sleep(1.45)
                     i = 0
@@ -334,7 +334,7 @@ class Worker:
                     paginate=True,
                     page_offset=page_offset,
                     page_timestamp=page_timestamp)
-                responses = await self.call(request, buddy=False, settings=True, inbox=False)
+                responses = await self.call(request, buddy=False, inbox=False)
                 if i > 2:
                     await sleep(1.5)
                     i = 0
@@ -360,14 +360,14 @@ class Worker:
             # request 5: get_player_profile
             request = self.api.create_request()
             request.get_player_profile()
-            await self.call(request, settings=True, inbox=False)
+            await self.call(request, inbox=False)
             await self.random_sleep(.2, .3)
 
             if self.player_level:
                 # request 6: level_up_rewards
                 request = self.api.create_request()
                 request.level_up_rewards(level=self.player_level)
-                await self.call(request, settings=True)
+                await self.call(request)
                 await self.random_sleep(.45, .7)
             else:
                 self.log.warning('No player level')
@@ -488,9 +488,9 @@ class Worker:
                         else:
                             self.unused_incubators.appendleft(item)
 
-    async def call(self, request, chain=True, buddy=True, settings=False, inbox=True, dl_hash=True, action=None):
+    async def call(self, request, chain=True, buddy=True, settings=True, inbox=True, dl_hash=True, action=None):
         if chain:
-            request.check_challenge()
+            # request.check_challenge() # not used anymore
             request.get_hatched_eggs()
             request.get_inventory(last_timestamp_ms=self.inventory_timestamp)
             request.check_awarded_badges()
