@@ -260,35 +260,57 @@ FIXED_OPACITY = False  # Make marker opacity independent of remaining time
 SHOW_TIMER = False  # Show remaining time on a label under each pokemon marker
 SHOW_TIMER_RAIDS = True  # Show remaining time on a label under each raid marker
 
+###
 ### OPTIONS BELOW THIS POINT ARE ONLY NECESSARY FOR NOTIFICATIONS ###
-NOTIFY = False  # enable notifications
+###
 
-# create images with Pokémon image and optionally include IVs and moves
-# requires cairo and ENCOUNTER = 'notifying' or 'all'
-TWEET_IMAGES = True
-# IVs and moves are now dependant on level, so this is probably not useful
-IMAGE_STATS = False
+from .notifyconfig import *
+NOTIFY = NotifyConfig()
 
-# As many hashtags as can fit will be included in your tweets, these will
-# be combined with landmark-specific hashtags (if applicable).
-HASHTAGS = {AREA_NAME, 'Monocle', 'PokemonGO'}
-#TZ_OFFSET = 0  # UTC offset in hours (if different from system time)
+NOTIFY.enable(False)
 
-# the required number of seconds remaining to notify about a Pokémon
+###
+### Rule-Based Notifications & Channels
+### See the documentation in notifyconfig.py for more information on these.
+###
+
+# Tyranitar & Machamp raids
+#NOTIFY.raid(['tyranitar', 'machamp'], True)
+# Tier-5 raids and raid eggs of any species
+#NOTIFY.raid(..., [tier >= 5])
+
+# Good first-gen starter spawns
+#NOTIFY.spawn(['bulbasaur', 'charmander', 'squirtle'], [iv > 80, attack >= 14])
+# Dragonite family spawns
+#NOTIFY.spawn(['dratini', 'dragonair', 'Dragonite'], True)
+# Perfect-IV spawns of any species
+#NOTIFY.spawn(..., [iv == 100])
+
+# Named notification channels have their own recipients and rules
+#NOTIFY.senders(DiscordConfig(URL="https://discordapp.com/api/webhooks/123/xx"), channel='private')
+#NOTIFY.spawn({'Unown'}, True, channel='private')
+#NOTIFY.senders(SMTPConfig(TO=['bob@example.com']), channel='koga')
+#NOTIFY.spawn({'pidgeotto'}, [iv == 100], [iv == 0], channel='koga')
+
+###
+### Score-Based Spawn Notifications
+###
+
+# the required number of seconds remaining for score-based spawn notifications
 TIME_REQUIRED = 600  # 10 minutes
 
 ### Only set either the NOTIFY_RANKING or NOTIFY_IDS, not both!
 # The (x) rarest Pokémon will be eligible for notification. Whether a
 # notification is sent or not depends on its score, as explained below.
-NOTIFY_RANKING = 90
+#NOTIFY_RANKING = 90
 
 # Pokémon to potentially notify about, in order of preference.
 # The first in the list will have a rarity score of 1, the last will be 0.
 #NOTIFY_IDS = (130, 89, 131, 3, 9, 134, 62, 94, 91, 87, 71, 45, 85, 114, 80, 6)
 
-# Sightings of the top (x) will always be notified about, even if below TIME_REQUIRED
+# Spawns of the top (x) will always notify, even if below TIME_REQUIRED
 # (ignored if using NOTIFY_IDS instead of NOTIFY_RANKING)
-ALWAYS_NOTIFY = 14
+#ALWAYS_NOTIFY = 14
 
 # Always notify about the following Pokémon even if their time remaining or scores are not high enough
 #ALWAYS_NOTIFY_IDS = {89, 130, 144, 145, 146, 150, 151}
@@ -315,39 +337,155 @@ FULL_TIME = 1800  # the number of seconds after a notification when only MINIMUM
 INITIAL_SCORE = 0.7  # the required score immediately after a notification
 MINIMUM_SCORE = 0.4  # the required score after FULL_TIME seconds have passed
 
-### The following values are fake, replace them with your own keys to enable
-### notifications, otherwise exclude them from your config
-### You must provide keys for at least one service to use notifications.
+# Emulate rarity-related bugs that were in the old notification module
+#EMULATE_LEGACY_RARITY_BUGS = True
 
-#PB_API_KEY = 'o.9187cb7d5b857c97bfcaa8d63eaa8494'
-#PB_CHANNEL = 0  # set to the integer of your channel, or to None to push privately
 
-#TWITTER_CONSUMER_KEY = '53d997264eb7f6452b7bf101d'
-#TWITTER_CONSUMER_SECRET = '64b9ebf618829a51f8c0535b56cebc808eb3e80d3d18bf9e00'
-#TWITTER_ACCESS_KEY = '1dfb143d4f29-6b007a5917df2b23d0f6db951c4227cdf768b'
-#TWITTER_ACCESS_SECRET = 'e743ed1353b6e9a45589f061f7d08374db32229ec4a61'
+# create images with Pokémon image and optionally include IVs and moves
+# requires cairo and ENCOUNTER = 'notifying' or 'all'
+TWEET_IMAGES = False
+# IVs and moves are now dependant on level, so this is probably not useful
+IMAGE_STATS = False
 
-## Telegram bot token is the one Botfather sends to you after completing bot creation.
-## Chat ID can be two different values:
-## 1) '@channel_name' for channels
-## 2) Your chat_id if you will use your own account. To retrieve your ID, write to your bot and check this URL:
-##     https://api.telegram.org/bot<BOT_TOKEN_HERE>/getUpdates
-##
-## TELEGRAM_MESSAGE_TYPE can be 0 or 1:
-## => 0 you'll receive notifications as venue (as you already seen before in Monocle)
-## => 1 you'll receive notifications as text message with GMaps link
-#TELEGRAM_BOT_TOKEN = '123456789:AA12345qT6QDd12345RekXSQeoZBXVt-AAA'
+# As many hashtags as can fit will be included in your tweets, these will
+# be combined with landmark-specific hashtags (if applicable).
+HASHTAGS = {AREA_NAME, 'Monocle', 'PokemonGO'}
+
+#TZ_OFFSET = 0  # UTC offset in hours (if different from system time)
+
+### Field format for datetime values in notification messages
+#DATETIME_FORMAT_SPEC = "%X"
+
+### String format for datetime ranges in notification messages
+### These field names will have values: {min}, {mid}, {max}, {margin}
+#DATETIME_RANGE_FORMAT = "between {min} and {max}"
+
+### String format for duration ranges in notification messages
+### These field names will have values: {min}, {mid}, {max}, {margin}
+#DURATION_RANGE_FORMAT = "between {min} and {max}"
+
+### Gender symbols & text for each gender number
+#GENDER_SYMBOLS = {1: "♂", 2: "♀", 3: "⚲"}
+#GENDER_TEXT = {1: "male", 2: "female", 3: "genderless"}
+
+### Navigation URL format, for spawn notifications
+#NAV_URL_FORMAT = 'https://maps.google.com/maps?q={lat:.5f},{lon:.5f}'
+
+
+###
+### Notification Senders
+###
+
+### The credentials below are fake. Replace them with your own keys to
+### enable notifications, or leave them commented out.
+### You must configure at least one sender in order to use notifications.
+
+### A Discord webhook URL can be created in Discord channel settings.  Example:
+### https://discordapp.com/api/webhooks/<webhook_id>/<webhook_token>
+###
+#DISCORD_URL = "https://discordapp.com/api/webhooks/1234567890/xxxxxxxx"
+###
+### The following format strings can override Discord webhook defaults:
+### WARNING: Using the static map URLs below will expose your google maps key.
+###
+#DISCORD_RAID_EGG_USERNAME = ""
+#DISCORD_RAID_EGG_AVATAR = "https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/0.png"
+#DISCORD_RAID_EGG_CONTENT = ""
+#DISCORD_RAID_EGG_EMBED_AUTHOR = ""
+#DISCORD_RAID_EGG_EMBED_DESC "Hatches at {start:%H:%M} ({eggremain!d})\nEnds at {end:%H:%M} ({remain!d})\nGym Control: {team}\n{place}"
+#DISCORD_RAID_EGG_EMBED_IMAGE = "https://maps.googleapis.com/maps/api/staticmap?key={config.GOOGLE_MAPS_KEY}&language={config.LANGUAGE}&size=250x125&zoom=15&markers={lat:.5f},{lon:.5f}"
+#DISCORD_RAID_EGG_EMBED_THUMBNAIL = "https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/0.png"
+#DISCORD_RAID_EGG_EMBED_TITLE = "T{tier} Raid Egg at {fortname}"
+#DISCORD_RAID_USERNAME = ""
+#DISCORD_RAID_AVATAR = "https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/{dexno}.png"
+#DISCORD_RAID_CONTENT = ""
+#DISCORD_RAID_EMBED_AUTHOR = ""
+#DISCORD_RAID_EMBED_DESC = "Ends at {end:%H:%M} ({remain!d})\nGym Control: {team}\n{move1}/{move2}"
+#DISCORD_RAID_EMBED_IMAGE = "https://maps.googleapis.com/maps/api/staticmap?key={config.GOOGLE_MAPS_KEY}&language={config.LANGUAGE}&size=250x125&zoom=15&markers={lat:.5f},{lon:.5f}"
+#DISCORD_RAID_EMBED_THUMBNAIL = "https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/{dexno}.png"
+#DISCORD_RAID_EMBED_TITLE = "{name} Raid at {fortname}"
+#DISCORD_SPAWN_USERNAME = ""
+#DISCORD_SPAWN_AVATAR = "https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/{dexno}.png"
+#DISCORD_SPAWN_CONTENT = ""
+#DISCORD_SPAWN_EMBED_AUTHOR = ""
+#DISCORD_SPAWN_EMBED_TITLE = "{name} - {pplace}"
+#DISCORD_SPAWN_EMBED_DESC = "[{attack}/{defense}/{stamina}] {gender} {move1}/{move2}\nUntil {untilrange}"
+#DISCORD_SPAWN_EMBED_IMAGE = "https://maps.googleapis.com/maps/api/staticmap?key={config.GOOGLE_MAPS_KEY}&language={config.LANGUAGE}&size=250x125&zoom=15&markers={lat:.5f},{lon:.5f}"
+#DISCORD_SPAWN_EMBED_THUMBNAIL = "https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/{dexno}.png"
+###
+### The following dicts allow completely custom Discord webhook structures:
+### https://discordapp.com/developers/docs/resources/webhook#execute-webhook
+###
+#DISCORD_RAID_EGG_DATA = {"content": "T{tier} Raid Egg until {start}"}
+#DISCORD_RAID_DATA = {"content": "{name} Raid until {end}"}
+#DISCORD_SPAWN_DATA = {"username": "{name} {iv}%", "embeds": [{"title": "{place}", "url": "{navurl}"}]}
+
+#PUSHBULLET_API_KEY = 'o.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#PUSHBULLET_CHANNEL = 'mytag'  # your channel tag name, or to None to push privately
+#PUSHBULLET_RAID_EGG_TITLE = "T{tier} Raid Egg"
+#PUSHBULLET_RAID_EGG_BODY = "{fortname}\nHatches at {start:%H:%M} ({eggremain!d})\nEnds at {end:%H:%M} ({remain!d})\nGym Control: {team}"
+#PUSHBULLET_RAID_TITLE = "T{tier} Raid: {name}"
+#PUSHBULLET_RAID_BODY = "{fortname}\nEnds at {end:%H:%M} ({remain!d})\nGym Control: {team}\n{move1}/{move2}"
+#PUSHBULLET_SPAWN_TITLE = "{name} {iv}% ({attack}/{defense}/{stamina})"
+#PUSHBULLET_SPAWN_BODY = "Until {untilrange}\n"
+
+#SMTP_TO = ['username@example.net']
+#SMTP_FROM = 'monocle@example.com'
+#SMTP_HOST = 'localhost'
+#SMTP_PORT = 587
+#SMTP_TLS = False
+#SMTP_STARTTLS = False
+#SMTP_TIMEOUT = 30
+#SMTP_USERNAME = None
+#SMTP_PASSWORD = None
+#SMTP_RAID_EGG_SUBJECT = "T{tier} Raid Egg"
+#SMTP_RAID_EGG_TEXT = "{fortname}\nHatches at {start:%H:%M} ({eggremain!d})\nEnds at {end:%H:%M} ({remain!d})\nGym Control: {team}\n{navurl}"
+#SMTP_RAID_SUBJECT = "T{tier} Raid: {name}"
+#SMTP_RAID_TEXT = "{fortname}\nEnds at {end:%H:%M} ({remain!d})\nGym Control: {team}\n{move1}/{move2}\n{navurl}"
+#SMTP_SPAWN_SUBJECT = "{name} {iv}%"
+#SMTP_SPAWN_TEXT = "[{attack},{defense},{stamina}] {gender} {move1}/{move2}\nUntil {untilrange}\n{navurl}"
+#SMTP_ATTACH = False
+
+### Telegram bot token is the one Botfather sends to you after creating a bot.
+### CHAT_ID can be any of these:
+### 1) '@channel_name' for public channels.
+### 2) The channel's chat_id for private channels.
+###    This is a 13-digit negative number, formed by prepending "-100" to the
+###    channel id, which can be retrieved using https://github.com/vysheng/tg
+###    or found in the channel's web.telegram.org URL (between the 'c' and '_').
+###    Details here:  https://github.com/GabrielRF/telegram-id
+### 3) Your chat_id if you will be sending messages to your own account.
+###    To retrieve your ID, write to your bot and check this URL:
+###    https://api.telegram.org/bot<BOT_TOKEN_HERE>/getUpdates
+###
+#TELEGRAM_BOT_TOKEN = '123456789:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
 #TELEGRAM_CHAT_ID = '@your_channel'
-#TELEGRAM_MESSAGE_TYPE = 0
+###
+### By default, Telegram notifications are sent as venue messages, composed of
+### (for spawns) TELEGRAM_SPAWN_TEXT, TELEGRAM_SPAWN_VENUE, and an embedded
+### location.  By setting TELEGRAM_MESSAGE_TYPE = 'text' instead of 'venue',
+### you can have messages composed only of TELEGRAM_SPAWN_TEXT, with optional
+### support for styled text (TELEGRAM_TEXT_PARSER = 'Markdown' or 'HTML').
+###
+#TELEGRAM_MESSAGE_TYPE = 'text'
+#TELEGRAM_RAID_EGG_TEXT = "T{tier} Raid Egg\n{fortname}\nHatches at {start:%H:%M} ({eggremain!d})\nEnds at {end:%H:%M} ({remain!d})\nGym Control: {team}\n{navurl}"
+#TELEGRAM_RAID_EGG_VENUE = "Hatch: {start:%H:%M}\n{fortname}\nGym Control: {team}"
+#TELEGRAM_RAID_TEXT = "{name} Raid\n{fortname}\nEnds at {end:%H:%M} ({remain!d})\nGym Control: {team}\n{move1}/{move2}\n{navurl}"
+#TELEGRAM_RAID_VENUE = "End: {end:%H:%M}\n{fortname}\nGym Control: {team}"
+#TELEGRAM_SPAWN_TEXT = "{name} {iv}% ({attack}/{defense}/{stamina})\nExpires: {untilrange}\n{navurl}"
+#TELEGRAM_SPAWN_VENUE = "Expires: {untilrange}\n{navurl}"
+#TELEGRAM_TEXT_PARSER = 'Markdown'
 
-NOTIFY_RAIDS = False  # enable raid notifications
-RAIDS_LVL_MIN = 4
-#RAIDS_IDS = {143, 248}
-#RAIDS_DISCORD_URL = "https://discordapp.com/api/webhooks/xxxxxxxxxxxx/xxxxxxxxxxxx"
-#TELEGRAM_RAIDS_CHAT_ID = '@your_channel'
+#TWITTER_CONSUMER_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_CONSUMER_SECRET = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_ACCESS_KEY = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_ACCESS_SECRET = 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+#TWITTER_RAID_EGG_FORMATS = ["T{tier} Raid Egg ({team}) hatches at {start:%H:%M} {navurl}"]
+#TWITTER_RAID_FORMATS = ["{name} Raid ({team}) ends at {end:%H:%M} {navurl}"]
+#TWITTER_SPAWN_FORMATS = ["{name} {pplaceshort} until {untilrange} {navurl}"]
 
-#ICONS_URL = "https://raw.githubusercontent.com/ZeChrales/monocle-icons/larger-outlined/larger-icons/{}.png"
-
+#WEBHOOK_TIMEOUT = 4
+#WEBHOOK_VERIFY_TLS = True
 #WEBHOOKS = {'http://127.0.0.1:4000'}
 
 

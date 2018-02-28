@@ -11,6 +11,7 @@ from aiopogo import HashServer
 from sqlalchemy.exc import OperationalError
 
 from .db import SIGHTING_CACHE, MYSTERY_CACHE, POKESTOP_CACHE, RAID_CACHE, GYM_CACHE
+from .notifier import Notifier
 from .utils import get_current_hour, dump_pickle, get_start_coords, get_bootstrap_points, randomize_point, best_factors, percentage_split
 from .shared import get_logger, LOOP, run_threaded, ACCOUNTS
 from . import bounds, db_proc, spawns, sanitized as conf
@@ -57,6 +58,7 @@ BAD_STATUSES = (
 class Overseer:
     def __init__(self, manager):
         self.log = get_logger('overseer')
+        self.notifier = Notifier(loop=LOOP)
         self.workers = []
         self.manager = manager
         self.things_count = deque(maxlen=9)
@@ -69,6 +71,7 @@ class Overseer:
         self.running = True
         self.all_seen = False
         self.idle_seconds = 0
+        self.notifier.log_state()
         self.log.info('Overseer initialized')
         self.pokemon_found = ''
 
@@ -89,7 +92,8 @@ class Overseer:
             else:
                 self.extra_queue.put(account)
 
-        self.workers = tuple(Worker(worker_no=x) for x in range(conf.GRID[0] * conf.GRID[1]))
+        self.workers = tuple(Worker(worker_no=x, notifier=self.notifier)
+            for x in range(conf.GRID[0] * conf.GRID[1]))
         db_proc.start()
         LOOP.call_later(10, self.update_count)
         LOOP.call_later(max(conf.SWAP_OLDEST, conf.MINIMUM_RUNTIME), self.swap_oldest)
@@ -230,7 +234,7 @@ class Overseer:
             # Set changed size during iteration
             self.coroutines_count = '-1'
 
-    def _print_status(self, _ansi=ANSI, _start=datetime.now(), _notify=conf.NOTIFY or conf.NOTIFY_RAIDS):
+    def _print_status(self, _ansi=ANSI, _start=datetime.now(), _notify=conf.NOTIFY):
         running_for = datetime.now() - _start
 
         seconds_since_start = running_for.seconds - self.idle_seconds or 0.1
@@ -273,7 +277,7 @@ class Overseer:
             pass
 
         if _notify:
-            sent = Worker.notifier.sent
+            sent = self.notifier.get_sent_count()
             output.append('Notifications sent: {}, per hour {:.1f}'.format(
                 sent, sent / hours_since_start))
 
@@ -348,6 +352,11 @@ class Overseer:
 
         if not pickle or not spawns.unpickle():
             await self.update_spawns(initial=True)
+
+        if conf.NOTIFY:
+            if not await self.notifier.test_senders():
+                if not conf.IGNORE_SENDER_TEST:
+                    return
 
         if not spawns or bootstrap:
             try:
@@ -542,6 +551,13 @@ class Overseer:
             if skip_time and monotonic() > skip_time:
                 return None
             await sleep(conf.SEARCH_SLEEP, loop=LOOP)
+
+    async def cleanup(self):
+        """Release any remaining open resources.
+        Call this after all workers have stopped.
+        """
+        if conf.NOTIFY:
+            await self.notifier.close_senders()
 
     def refresh_dict(self):
         while not self.extra_queue.empty():

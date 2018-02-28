@@ -4,6 +4,13 @@ from . import sanitized as conf
 
 language = conf.LANGUAGE.upper()[:2]
 
+TEAMS = defaultdict(lambda: '?', {
+    0: "neutral",
+    1: "Mystic",
+    2: "Valor",
+    3: "Instinct",
+})
+
 POKEMON = defaultdict(lambda: '?', {
     0: '--',
     1: 'Bulbasaur',

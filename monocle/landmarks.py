@@ -101,14 +101,18 @@ class Landmark:
         else:
             return self.location.coords[0]
 
-    def generate_string(self, coordinates):
+    def generate_string(self, coordinates, short=False):
+        if short:
+            name = self.shortname or self.name
+        else:
+            name = self.name
         if coordinates in self:
-            return '{} {}'.format(self.phrase, self.name)
+            return '{} {}'.format(self.phrase, name)
         distance = self.distance_from_point(coordinates)
         if distance < 50 or (self.is_area and distance < 100):
-            return '{} {}'.format(self.phrase, self.name)
-        else:
-            return '{:.0f} meters from {}'.format(distance, self.name)
+            return '{} {}'.format(self.phrase, name)
+        return '{:.0f}{} from {}'.format(
+            distance, "m" if short else " meters", name)
 
     def distance_from_point(self, coordinates):
         point = Point(*coordinates)

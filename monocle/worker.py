@@ -16,9 +16,6 @@ from .utils import round_coords, load_pickle, get_device_info, get_start_coords,
 from .shared import get_logger, LOOP, SessionManager, run_threaded, ACCOUNTS
 from . import altitudes, avatar, bounds, db_proc, spawns, sanitized as conf
 
-if conf.NOTIFY or conf.NOTIFY_RAIDS:
-    from .notification import Notifier
-
 if conf.CACHE_CELLS:
     from array import typecodes
     if 'Q' in typecodes:
@@ -77,11 +74,9 @@ class Worker:
     else:
         proxies = None
 
-    if conf.NOTIFY or conf.NOTIFY_RAIDS:
-        notifier = Notifier()
-
-    def __init__(self, worker_no):
+    def __init__(self, worker_no, notifier):
         self.worker_no = worker_no
+        self.notifier = notifier
         self.log = get_logger('worker-{}'.format(worker_no))
         # account information
         try:
@@ -818,7 +813,7 @@ class Worker:
                         except Exception as e:
                             self.log.warning('{} during encounter', e.__class__.__name__)
 
-                if notify_conf and self.notifier.eligible(normalized):
+                if notify_conf and self.notifier.spawn_eligible(normalized):
                     if encounter_conf and 'move_1' not in normalized:
                         try:
                             await self.encounter(normalized, pokemon.spawn_point_id)
@@ -827,7 +822,8 @@ class Worker:
                             raise
                         except Exception as e:
                             self.log.warning('{} during encounter', e.__class__.__name__)
-                    LOOP.create_task(self.notifier.notify(normalized, map_objects.time_of_day))
+                    LOOP.create_task(self.notifier.spawn_notify(
+                        normalized, pokemon, map_objects.time_of_day))
                 db_proc.add(normalized)
 
             for fort in map_cell.forts:
@@ -877,8 +873,9 @@ class Worker:
                             db_proc.add(g)
                     if fort.HasField('raid_info'):
                         if fort not in RAID_CACHE:
-                            if conf.NOTIFY_RAIDS:
-                                LOOP.create_task(self.notifier.notify_raid(fort))
+                            if notify_conf:
+                                LOOP.create_task(self.notifier.raid_notify(
+                                    fort=g, rawfort=fort))
                             raid = self.normalize_raid(fort)
                             db_proc.add(raid)
 

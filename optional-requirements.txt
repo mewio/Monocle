@@ -1,3 +1,4 @@
+aiosmtplib>=1.0.1
 asyncpushbullet>=0.12
 peony-twitter>=1.0.0
 gpsoauth>=0.4.0

@@ -145,6 +145,8 @@ def cleanup(overseer, manager):
             log = get_logger('cleanup')
             log.exception('A wild {} appeared during exit!', e.__class__.__name__)
 
+        LOOP.run_until_complete(overseer.cleanup())
+
         db_proc.stop()
         overseer.refresh_dict()
 
