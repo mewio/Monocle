@@ -156,7 +156,7 @@ function getPopupContent (item) {
 }
 
 function getRaidPopupContent (raw) {
-    var content = '<b>' + raw.name + '</b> <a href="' + raw.url + '" target="_blank">Image</a><br>' +
+    var content = '<b>' + raw.name + '</b> <br><a href="' + raw.url + '"target="_blank"><img src="' + raw.url + '" width="90" height="90" style="border-radius: 50%"></a>' +
                   '<b>Raid level ' + raw.level + '</b><br>';
 	var info_link = (raw.pokemon_id === 0) ? '' : ' - <a href="https://pokemongo.gamepress.gg/pokemon/' + raw.pokemon_id + '">#' + raw.pokemon_id + '</a>';
 	content += 'Pokemon: ' + raw.pokemon_name + info_link + '<br>';
@@ -246,7 +246,7 @@ function FortMarker (raw) {
         var content = ''
 
         if (raw.name != null) {
-            content += '<b>' + raw.name + '</b> <a href="' + raw.url + '" target="_blank">Image</a>' +
+            content += '<b>' + raw.name + '</b> <br><a href="' + raw.url + '"target="_blank"><img src="' + raw.url + '" width="90" height="90" style="border-radius: 50%"></a>' +
                        '<br><span style="font-size: smaller">' + raw.desc + '</span><br>';
         }
 
@@ -439,7 +439,7 @@ function addPokestopsToMap (data, map) {
         }
         var description = "Pokéstop";
         if (item.name != "") {
-            description = '<b>' + item.name + '</b> <a href="' + item.url + '" target="_blank">Image</a>' +
+            description = '<b>' + item.name + '</b> <br><a href="' + item.url + '"target="_blank"><img src="' + item.url + '" width="90" height="90" style="border-radius: 50%"></a>' +
                           '<br><span style="font-size: smaller">' + item.desc + '</span>';
         }
         var marker = L.marker([item.lat, item.lon], {icon: icon});
